@@ -127,6 +127,37 @@ low tones mean an error, not a slow dump.
 `manifest.txt` records each image's original flash location and checksum. Keep
 it with the images for a future low-level restore.
 
+## Preparing split images for a later restore
+
+Keep the numbered files as they are for archive storage. Only when preparing a
+working copy for a future xrock restore, join every numbered piece into its
+original single image. Do this before flashing; do not flash an individual
+`.001` or `.002` piece.
+
+For example, on Linux, from inside `flash-dump-1`:
+
+```sh
+cat useremain.img.[0-9][0-9][0-9] > useremain.img
+md5sum useremain.img
+awk '$1 == "useremain" { print $5 }' manifest.txt
+```
+
+The MD5 value printed by `md5sum` must match the value printed from
+`manifest.txt`. The filename can differ by model: replace `useremain` with the
+base name of the numbered pieces on your drive.
+
+On Windows Command Prompt, the current two-piece example is:
+
+```bat
+cd X:\flash-dump-1
+copy /b useremain.img.001+useremain.img.002 useremain.img
+certutil -hashfile useremain.img MD5
+```
+
+If there are more pieces, add each one in numeric order, for example append
+`+useremain.img.003`. Compare the resulting MD5 with the matching row in
+`manifest.txt` before using the image for low-level flashing.
+
 ## If it fails
 
 Do not treat a partial `flash-dump-*` folder as a full recovery backup. Keep it
