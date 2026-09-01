@@ -1,8 +1,18 @@
 # Full partition dumper guide
 
-The dumper creates a restorable copy of the printer's complete internal flash
-on a USB drive. It also saves the printer-specific identity files that cannot
-be downloaded again, such as calibration and account binding data.
+> **Important:** This SWU only dumps partitions to the USB drive. It has no
+> restore function. Its purpose is to prepare for a bricked-printer recovery
+> without opening the printer first. Restoring this backup requires low-level
+> flashing with xrock: remove the mainboard, solder a USB connection to it,
+> and connect it to a PC.
+
+The dumper creates a raw copy of the printer's internal flash on a USB drive.
+It also saves printer-specific identity files that cannot be downloaded again,
+such as calibration and account-binding data.
+
+> **Current validation:** The Kobra S1 dumper has been used to create a dump.
+> A full restore has not yet been tested. The packages for Kobra 2 Pro, Kobra
+> 3 variants, and Kobra S1 variants are provided for their respective models.
 
 ## Before starting
 
@@ -15,9 +25,69 @@ be downloaded again, such as calibration and account binding data.
 4. Safely eject the drive, insert it into the powered printer, and leave it
    connected until the result signal.
 
-The large storage partition is split into numbered files such as
-`useremain.img.001`, `.002`, and so on. This is normal and keeps every file
-below FAT32's 4 GB limit. Never delete, rename, or reorder those files.
+Any partition larger than FAT32's 4 GB per-file limit is split into numbered
+files, such as `useremain.img.001`, `.002`, and so on. On the Kobra S1/Kobra
+3-family stock layout this is `useremain`; another model may use a different
+large data-partition name. Never delete, rename, or reorder those files.
+
+> **Privacy warning:** The large user-data partition and `identity/` folder
+> contain your printer's unique identity data, including cloud-related data.
+> Do not share the images blindly. Removing that information from raw partition
+> images requires Linux commands and knowledge that this guide does not cover.
+
+## Example USB-drive layout
+
+Before insertion, the USB drive contains only the updater package:
+
+```text
+USB drive
+└── aGVscF9zb3Nf/
+    └── update.swu
+```
+
+After a successful Kobra S1 or Kobra 3 dump, the dumper creates a numbered
+backup directory alongside the updater folder. Partition image names depend
+on the printer's stock partition table, so the list below is an example rather
+than a fixed list for every model.
+
+```text
+USB drive
+├── aGVscF9zb3Nf/
+│   └── update.swu
+└── flash-dump-1/
+    ├── dump.log
+    ├── manifest.txt
+    ├── env.img
+    ├── idblock.img
+    ├── uboot_a.img
+    ├── uboot_b.img
+    ├── misc.img
+    ├── boot_a.img
+    ├── boot_b.img
+    ├── system_a.img
+    ├── system_b.img
+    ├── oem_a.img
+    ├── oem_b.img
+    ├── userdata.img
+    ├── ac_lib_a.img
+    ├── ac_lib_b.img
+    ├── ac_app_a.img
+    ├── ac_app_b.img
+    ├── useremain.img.001
+    ├── useremain.img.002
+    ├── ...
+    └── identity/
+        ├── userdata/
+        │   └── ... printer-specific configuration files ...
+        └── useremain/
+            └── ... printer-specific ID files ...
+```
+
+The shown partitions are the normal stock layout for the Kobra S1 and Kobra 3
+family. A different model can have different partition names or no
+`useremain` directory. What matters is that every image named in
+`manifest.txt`, all numbered pieces, and the complete `identity/` directory
+stay together in the same `flash-dump-*` folder.
 
 ## What the beeps mean
 
@@ -34,6 +104,17 @@ After either final signal, the same success or failure pattern repeats every
 five seconds until the USB drive is removed. That makes the result audible if
 you return later.
 
+## Expected duration and normal sequence
+
+Do not remove the USB drive merely because the dump seems slow. A normal full
+dump takes roughly **25 to 30 minutes**, but this is only a ballpark figure:
+the USB drive speed and printer model affect the time substantially.
+
+The normal audible sequence is one long start beep, regular high-pitched copy
+beeps, regular lower-pitched checksum beeps, and short completion beeps between
+steps. It ends only with the repeating three rising tones. The repeating four
+low tones mean an error, not a slow dump.
+
 ## After success
 
 1. Remove the USB drive after the repeated three-tone success signal.
@@ -43,8 +124,8 @@ you return later.
    all image files, including every numbered image piece.
 4. Copy the complete folder to safe storage before reusing the USB drive.
 
-`manifest.txt` records each image's original flash location and checksum. It
-is required for a correct stock restore.
+`manifest.txt` records each image's original flash location and checksum. Keep
+it with the images for a future low-level restore.
 
 ## If it fails
 

@@ -22,6 +22,9 @@ These create a complete flash backup on the USB drive, including the identity
 snapshot and the large storage partition split into FAT32-safe numbered files.
 Keep the resulting `flash-dump-*` folder intact.
 
+> **Important:** These SWUs only create backups; they cannot restore them. A
+> restore requires separate low-level xrock flashing from a PC.
+
 Read the [dumper usage guide](releases/v1.0.0/dumpers/dumpers.md) before
 starting. It explains USB preparation, progress beeps, successful completion,
 and failure handling.
